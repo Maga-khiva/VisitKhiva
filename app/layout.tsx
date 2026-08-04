@@ -14,6 +14,14 @@ export const metadata = {
       '한국어 가이드와 VIP Urgench 공항 픽업을 제공하는 히바 전문 투어 플랫폼',
     url: 'https://visitkhiva.example',
     siteName: 'VisitKhiva',
+    images: [
+      {
+        url: '/visitkhiva.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'VisitKhiva Logo',
+      },
+    ],
   },
 }
 
@@ -39,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <head>
         <meta name="naver-site-verification" content="" />
+        <link rel="icon" href="/visitkhiva.jpg" type="image/jpeg" />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css" />
       </head>
