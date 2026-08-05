@@ -9,8 +9,6 @@ type Post = {
   image?: string
 }
 
-const fallbackImage = 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1200&q=80'
-
 export default function NaverBlog() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
@@ -81,17 +79,12 @@ export default function NaverBlog() {
               <div className="flex h-full flex-col">
                 <div className="relative h-40 w-full overflow-hidden bg-gray-100">
                   <img
-                    src={p.image || fallbackImage}
+                    src={p.image}
                     alt={p.title}
                     className="h-full w-full object-cover"
                     loading="lazy"
-                    onError={(e) => {
-                      const target = e.currentTarget as HTMLImageElement
-                      if (target.src !== fallbackImage) {
-                        target.onerror = null
-                        target.src = fallbackImage
-                      }
-                    }}
+                    onLoad={() => console.log('✅ Image loaded:', p.image)}
+                    onError={() => console.error('❌ Failed Image URL:', p.image)}
                   />
                 </div>
                 <div className="p-4 flex-1 flex flex-col justify-between">
