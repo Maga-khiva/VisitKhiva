@@ -17,19 +17,36 @@ function stripHtml(html: string) {
     .trim()
 }
 
+function normalizeUrl(src: string): string {
+  let url = src.trim()
+  if (url.startsWith('//')) {
+    url = `https:${url}`
+  }
+  if (/%[0-9A-Fa-f]{2}/.test(url)) {
+    return url
+  }
+  try {
+    return encodeURI(url)
+  } catch {
+    return url
+  }
+}
+
 function extractImageFromHtml(html: string): string | undefined {
   const patterns = [
     /<img[^>]+src=["']([^"']*(?:blogthumb\.pstatic\.net|pstatic\.net|phinf)[^"']*)["']/i,
-    /<img[^>]+src=["']([^"']*(?:blogthumb\.pstatic\.net|pstatic\.net|phinf)[^"']*)["']/i,
-    /<img[^>]+src=["']([^"']+)["']/i,
+    /<img[^>]+src=(["']?)([^"'\s>]+)\1/i,
   ]
 
   for (const pattern of patterns) {
     const match = html.match(pattern)
-    if (match && match[1]) {
-      const src = match[1]
-      if (!src.includes('px.ad') && !src.includes('tracker') && !src.includes('1x1') && /^https?:\/\//.test(src)) {
-        return src
+    if (match) {
+      const src = match[1] || match[2]
+      if (src && !src.includes('px.ad') && !src.includes('tracker') && !src.includes('1x1')) {
+        const normalized = normalizeUrl(src)
+        if (/^https?:\/\//.test(normalized)) {
+          return normalized
+        }
       }
     }
   }
@@ -71,9 +88,9 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json({ items })
+    return NextResponse.json({ items }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (err) {
     console.error('Naver blog RSS error:', err)
-    return NextResponse.json({ items: [], error: String(err) }, { status: 500 })
+    return NextResponse.json({ items: [], error: String(err) }, { status: 500, headers: { 'Cache-Control': 'no-store' } })
   }
 }
