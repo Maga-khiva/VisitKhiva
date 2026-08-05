@@ -83,6 +83,7 @@ export default function NaverBlog() {
                     alt={p.title}
                     className="h-full w-full object-cover"
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                     onLoad={() => console.log('✅ Image loaded:', p.image)}
                     onError={() => console.error('❌ Failed Image URL:', p.image)}
                   />
