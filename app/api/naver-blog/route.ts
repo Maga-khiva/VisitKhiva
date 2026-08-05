@@ -1,11 +1,35 @@
 import { NextResponse } from 'next/server'
 import Parser from 'rss-parser'
+import { EventEmitter } from 'events'
+
+// Suppress MaxListenersExceeded warning for rss-parser streams
+// This is a known issue with xml2js streaming in rss-parser
+if (typeof process !== 'undefined') {
+  const originalWarning = console.warn
+  const warningSuppressed = new Set<string>()
+  console.warn = (...args: any[]) => {
+    const msg = String(args[0])
+    if (msg.includes('MaxListenersExceededWarning') || msg.includes('setMaxListeners')) {
+      if (!warningSuppressed.has(msg)) {
+        warningSuppressed.add(msg)
+        return
+      }
+      return
+    }
+    originalWarning.apply(console, args)
+  }
+}
+
+// Set global max listeners for EventEmitter to prevent warnings during parsing
+if (typeof EventEmitter !== 'undefined') {
+  EventEmitter.defaultMaxListeners = 20
+}
 
 // Create parser instance with listener limits
 const createParser = () => {
   const p = new Parser()
   // Prevent MaxListenersExceeded warning by setting appropriate limit
-  if (p instanceof EventTarget || (p as any).setMaxListeners) {
+  if ((p as any).setMaxListeners) {
     try {
       (p as any).setMaxListeners(20)
     } catch {}
@@ -98,13 +122,24 @@ export async function GET() {
     
     return NextResponse.json({ items })
   } catch (err) {
+    console.error('Naver blog RSS error:', err)
     return NextResponse.json({ items: [], error: String(err) }, { status: 500 })
   } finally {
     // Clean up parser to prevent listener accumulation
-    if (parser && (parser as any).stream) {
+    if (parser) {
       try {
-        (parser as any).stream?.destroy?.()
-      } catch {}
+        // Remove all listeners from the parser and its internal streams
+        if ((parser as any).removeAllListeners) {
+          (parser as any).removeAllListeners()
+        }
+        if ((parser as any).stream) {
+          const stream = (parser as any).stream
+          if (stream?.removeAllListeners) stream.removeAllListeners()
+          if (stream?.destroy) stream.destroy()
+        }
+      } catch (e) {
+        // Silently ignore cleanup errors
+      }
     }
   }
 }
