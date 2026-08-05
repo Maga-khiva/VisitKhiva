@@ -9,7 +9,8 @@ type Post = {
   image?: string
 }
 
-const placeholderImage = 'https://via.placeholder.com/180x140?text=NAVER+BLOG'
+// Reliable Unsplash fallback (Khiva / Uzbekistan heritage)
+const fallbackImage = 'https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=500&auto=format&fit=crop'
 
 export default function NaverBlog() {
   const [posts, setPosts] = useState<Post[]>([])
@@ -53,11 +54,16 @@ export default function NaverBlog() {
             <div className="flex h-full flex-col">
               <div className="relative h-40 w-full overflow-hidden bg-gray-100">
                 <img
-                  src={p.image || placeholderImage}
+                  src={p.image || fallbackImage}
                   alt={p.title}
                   className="h-full w-full object-cover"
                   onError={(e) => {
-                    e.currentTarget.src = placeholderImage
+                    const t = e.currentTarget as HTMLImageElement
+                    // If current src already fallback, stop to avoid infinite loop
+                    if (t.src && !t.src.includes('images.unsplash.com')) {
+                      t.onerror = null
+                      t.src = fallbackImage
+                    }
                   }}
                 />
               </div>
