@@ -40,58 +40,108 @@ const createParser = () => {
 async function extractImageFromBlogPost(url: string): Promise<string | undefined> {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 8000)
     
     const response = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0' }
+      headers: { 
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
     })
-    timeoutId && clearTimeout(timeoutId)
     
+    if (timeoutId) clearTimeout(timeoutId)
     if (!response.ok) return undefined
     
     const html = await response.text()
-    // Try to extract first image from blog post content
-    const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i)
-    if (imgMatch && imgMatch[1]) {
-      const src = imgMatch[1]
-      // Filter out tracking pixels and very small images
-      if (!src.includes('px.ad') && !src.includes('tracker') && !src.includes('.gif')) {
-        return src
+    
+    // Try multiple patterns to extract images from Naver blog
+    const patterns = [
+      // Naver blog post content image
+      /<img[^>]+src=["']([^"']*(?:phinf|timthumb|resize)\.pstatic\.net[^"']*)["']/i,
+      // General image in content
+      /<img[^>]+class=["'](?:_img[^"']*)["'][^>]+src=["']([^"']+)["']/i,
+      // First non-tracking image
+      /<img[^>]+src=["']([^"']+)["'][^>]*(?!tracking|pixel|1x1)/i,
+      // Fallback: any img src
+      /<img[^>]+src=["']([^"']+)["']/i,
+    ]
+    
+    for (const pattern of patterns) {
+      const match = html.match(pattern)
+      if (match && match[1]) {
+        const src = match[1]
+        // Filter out tracking and small images
+        if (!src.includes('px.ad') && !src.includes('tracker') && !src.includes('1x1')) {
+          return src
+        }
       }
     }
+    
     return undefined
-  } catch {
+  } catch (e) {
+    console.error('Image extraction error:', e)
     return undefined
   }
 }
 
 function extractImage(item: any): string | undefined {
-  const imageSources = [
+  // Try to extract from various RSS item fields (different RSS feed formats)
+  const candidates = [
+    // Naver-specific fields
+    item['naver:image'],
+    item['naver:image']?.url,
+    item['naver:thumbnail'],
+    // Standard media fields
     item.enclosure?.url,
     item['media:content']?.url,
     item['media:content']?.['$']?.url,
     item['media:thumbnail']?.url,
     item['media:thumbnail']?.['$']?.url,
+    item['media:thumbnail']?.[0]?.['$']?.url,
+    // Image fields
     item.thumbnail,
+    item.image,
     item.image?.url,
     item['content:encoded'],
     item.content,
     item.description,
   ]
 
-  for (const source of imageSources) {
+  // Check each candidate for valid image URLs
+  for (const source of candidates) {
     if (typeof source === 'string' && /^https?:\/\//.test(source)) {
-      // Filter out tracking pixels
-      if (!source.includes('px.ad') && !source.includes('tracker')) {
-        return source
+      // Filter out tracking pixels and small images
+      if (!source.includes('px.ad') && !source.includes('tracker') && !source.includes('1x1')) {
+        // Prioritize Pstatic URLs (Naver's CDN for real images)
+        if (source.includes('pstatic.net') || source.includes('phinf')) {
+          return source
+        }
       }
     }
   }
 
+  // If no direct URL found, try parsing HTML content for images
   const html = String(item['content:encoded'] || item.content || item.description || '')
-  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i)
-  return match && match[1] && !match[1].includes('px.ad') ? match[1] : undefined
+  if (html) {
+    // Try to extract first real image from HTML content
+    const patterns = [
+      /<img[^>]+src=["']([^"']*(?:phinf|pstatic)\.naver\.net[^"']*)["']/i,
+      /<img[^>]+class=["'][^"']*_img[^"']*["'][^>]+src=["']([^"']+)["']/i,
+      /<img[^>]+src=["']([^"']+)["']/i,
+    ]
+
+    for (const pattern of patterns) {
+      const match = html.match(pattern)
+      if (match && match[1]) {
+        const src = match[1]
+        if (!src.includes('px.ad') && !src.includes('tracker') && !src.includes('1x1')) {
+          return src
+        }
+      }
+    }
+  }
+
+  return undefined
 }
 
 export async function GET() {
