@@ -9,6 +9,8 @@ type Post = {
   image?: string
 }
 
+const fallbackImage = 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1200&q=80'
+
 export default function NaverBlog() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
@@ -16,7 +18,7 @@ export default function NaverBlog() {
   useEffect(() => {
     let mounted = true
     setLoading(true)
-    
+
     fetch(`/api/naver-blog?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((data) => {
@@ -32,7 +34,7 @@ export default function NaverBlog() {
           setLoading(false)
         }
       })
-    
+
     return () => {
       mounted = false
     }
@@ -78,17 +80,19 @@ export default function NaverBlog() {
             >
               <div className="flex h-full flex-col">
                 <div className="relative h-40 w-full overflow-hidden bg-gray-100">
-                  {p.image ? (
-                    <img
-                      src={p.image}
-                      alt={p.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gray-200 text-sm text-gray-500">
-                      이미지가 없습니다
-                    </div>
-                  )}
+                  <img
+                    src={p.image || fallbackImage}
+                    alt={p.title}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement
+                      if (target.src !== fallbackImage) {
+                        target.onerror = null
+                        target.src = fallbackImage
+                      }
+                    }}
+                  />
                 </div>
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
