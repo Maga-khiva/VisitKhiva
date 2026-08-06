@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 
 // Force dynamic so Next.js does not serve static cached result on build
 export const dynamic = 'force-dynamic'
@@ -57,7 +57,7 @@ function extractImageFromHtml(html: string): string | undefined {
   return undefined
 }
 
-export async function GET(request?: Request) {
+export async function GET(request: NextRequest) {
   try {
     const id = process.env.NEXT_PUBLIC_NAVER_BLOG_ID || 'visitkhiva'
     const feedUrl = `https://rss.blog.naver.com/${id}.xml`
