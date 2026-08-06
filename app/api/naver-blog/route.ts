@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 
+// Force dynamic so Next.js does not serve static cached result on build
+export const dynamic = 'force-dynamic'
+
 function parseCDATA(value: string) {
   return value.replace(/^<!\[CDATA\[|\]\]>$/g, '').trim()
 }
@@ -54,14 +57,16 @@ function extractImageFromHtml(html: string): string | undefined {
   return undefined
 }
 
-export async function GET() {
+export async function GET(request?: Request) {
   try {
     const id = process.env.NEXT_PUBLIC_NAVER_BLOG_ID || 'visitkhiva'
     const feedUrl = `https://rss.blog.naver.com/${id}.xml`
     const response = await fetch(feedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+      },
+      // ensure we're always fetching fresh feed data (no static caching)
+      cache: 'no-store'
     })
 
     if (!response.ok) {
@@ -69,7 +74,22 @@ export async function GET() {
     }
 
     const xml = await response.text()
+    // If caller requests raw XML (debug), return it directly for inspection
+    try {
+      const reqUrl = request ? new URL(request.url) : null
+      const rawParam = reqUrl ? reqUrl.searchParams.get('raw') : null
+      if (rawParam === '1' || rawParam === 'true') {
+        console.log('Returning raw RSS XML for debugging; length:', xml.length)
+        return new NextResponse(xml, { headers: { 'Content-Type': 'application/rss+xml', 'Cache-Control': 'no-store' } })
+      }
+    } catch (e) {
+      // ignore URL parsing errors and continue
+    }
     const itemMatches = Array.from(xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi))
+    // log raw RSS items count for server-side diagnostics (Netlify function logs)
+    console.log('Fetched raw Naver items count:', itemMatches.length)
+
+    // map items (do not filter out posts missing thumbnails)
     const items = itemMatches.slice(0, 10).map((match) => {
       const itemXml = match[1]
       const title = extractTag(itemXml, 'title')
@@ -87,6 +107,8 @@ export async function GET() {
         image,
       }
     })
+    // log mapped items count as well for diagnostics
+    console.log('Mapped Naver items returned:', items.length)
 
     return NextResponse.json({ items }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (err) {
