@@ -1,54 +1,139 @@
 "use client"
-import React from 'react'
+import React, { useState } from 'react'
+import { services, type Service } from '../data/services'
+import BookingModal from './BookingModal'
 
-const services = [
-  {
-    title: 'VIP Airport Transfer',
-    subtitle: 'Urgench ↔ Khiva 편안한 픽업',
-    image: 'https://images.pexels.com/photos/17455630/pexels-photo-17455630.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    alt: 'Luxury airport transfer vehicle',
-  },
-  {
-    title: '한국어 전용 가이드',
-    subtitle: '경험 많은 한국어 가이드 제공',
-    image: 'https://images.unsplash.com/photo-1728281522185-0c06b2d7a598?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?auto=compress&cs=tinysrgb&w=1200',
-    alt: 'Korean guide with tourists at historic site',
-  },
-  {
-    title: '헤리티지 게스트하우스 & 호텔',
-    subtitle: '전통 숙소 및 현대 호텔 예약 지원',
-    image: 'https://q-xx.bstatic.com/xdata/images/hotel/608x352/889555559.webp?k=fabc3034b10dc1d6af61e9da6cbfb7cd2ac725abbdefd614f1160ad2304797f0&o=?auto=compress&cs=tinysrgb&w=1200',
-    alt: 'Uzbek heritage guesthouse courtyard',
-  },
-  {
-    title: '한복 & 전통 의상 촬영 투어',
-    subtitle: '전통 의상으로 기념 촬영',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMEYX_ks4T0pGb7861T9HoOUW-liYOA8ILJ-V0OqYLCKZVcoKsh39GXmw_&s=10?auto=format&fit=crop&w=1200&q=80',
-    alt: 'Traditional costume photo tour',
-  },
-]
+const PLACEHOLDER_IMAGE =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22300%22/%3E%3C/svg%3E'
+
+function ServiceCard({
+  service,
+  lang,
+  onBook,
+}: {
+  service: Service
+  lang: 'kr' | 'en'
+  onBook: (serviceTitle: string) => void
+}) {
+  const kakaoUrl = process.env.NEXT_PUBLIC_KAKAO_CHAT_URL || '#'
+  const title = service.title[lang]
+  const description = service.description[lang]
+
+  return (
+    <div className="card overflow-hidden transition duration-300 hover:-translate-y-0.5 hover:shadow-md">
+      <div className="relative h-48 w-full bg-gray-200 overflow-hidden">
+        <img
+          src={service.image}
+          alt={service.alt}
+          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+          onError={(e) => {
+            e.currentTarget.src = PLACEHOLDER_IMAGE
+          }}
+        />
+        {service.badge && (
+          <span className="absolute top-3 left-3 rounded-md bg-white/90 px-2 py-1 text-xs font-medium text-[#0052CC] shadow-sm">
+            {service.badge[lang]}
+          </span>
+        )}
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-lg text-[#0052CC]">{title}</h3>
+        <p className="mt-2 text-gray-600">{description}</p>
+
+        {service.highlights.length > 0 && (
+          <ul className="mt-3 space-y-1.5">
+            {service.highlights.map((item) => (
+              <li key={item.en} className="flex gap-2 text-sm text-gray-600">
+                <span className="mt-0.5 text-[#0052CC]" aria-hidden>
+                  ✓
+                </span>
+                <span>{item[lang]}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {service.pricingOptions && service.pricingOptions.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {service.pricingOptions.map((option) => (
+              <div key={option.amount} className="flex items-center justify-between">
+                <p className="text-sm text-gray-500">{option.label[lang]}</p>
+                <p className="text-xl font-bold">{option.amount}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {service.price && (
+          <div className="mt-4">
+            <p className="text-xl font-bold">{service.price}</p>
+          </div>
+        )}
+
+        <div className="mt-4 flex flex-col sm:flex-row gap-2">
+          <button
+            type="button"
+            onClick={() => onBook(service.title.kr)}
+            className="inline-flex items-center justify-center px-4 py-2 bg-[#0052CC] text-white rounded-md font-medium"
+          >
+            {lang === 'en' ? 'Book Now' : '투어 예약하기'}
+          </button>
+          <a
+            href={kakaoUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center px-4 py-2 bg-[#FEE500] text-black rounded-md font-medium"
+          >
+            {lang === 'en' ? 'KakaoTalk Contact' : '카카오톡 바로 문의'}
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function Services() {
+  const [lang, setLang] = useState<'kr' | 'en'>('kr')
+  const [bookingOpen, setBookingOpen] = useState(false)
+  const [selectedService, setSelectedService] = useState<string | undefined>()
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {services.map((service) => (
-        <div key={service.title} className="card overflow-hidden">
-          <div className="relative h-48 w-full bg-gray-200">
-            <img 
-              src={service.image} 
-              alt={service.alt} 
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22300%22/%3E%3C/svg%3E'
-              }}
-            />
-          </div>
-          <div className="p-4">
-            <h3 className="font-semibold text-lg text-[#0052CC]">{service.title}</h3>
-            <p className="mt-2 text-gray-600">{service.subtitle}</p>
-          </div>
-        </div>
-      ))}
+    <div>
+      <div className="mb-4 flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => setLang('kr')}
+          className={`text-sm ${lang === 'kr' ? 'font-semibold text-[#0052CC]' : 'text-gray-500'}`}
+        >
+          KR
+        </button>
+        <span className="text-gray-300">|</span>
+        <button
+          type="button"
+          onClick={() => setLang('en')}
+          className={`text-sm ${lang === 'en' ? 'font-semibold text-[#0052CC]' : 'text-gray-500'}`}
+        >
+          EN
+        </button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {services.map((service) => (
+          <ServiceCard
+            key={service.id}
+            service={service}
+            lang={lang}
+            onBook={(serviceTitle) => {
+              setSelectedService(serviceTitle)
+              setBookingOpen(true)
+            }}
+          />
+        ))}
+      </div>
+      <BookingModal
+        isOpen={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        selectedService={selectedService}
+      />
     </div>
   )
 }

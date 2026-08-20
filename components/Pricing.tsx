@@ -5,6 +5,8 @@ const priceData = [
   { name: '한국어 가이드 (Half day)', usd: 40, note: '약 4시간' },
   { name: '헤리티지 게스트하우스', usd: 40, note: '1박 평균' },
   { name: '한복 촬영 투어', usd: 35, note: '의상 포함' },
+  { name: '사막 요새 프라이빗 투어', usd: 65, note: 'Vehicle Only · 가이드 포함 $100' },
+  { name: '히바 → 부하라 프라이빗 이동', usd: 180, note: '차량당 (최대 3–4인) ~$220' },
 ]
 
 function toKRW(usd: number) {

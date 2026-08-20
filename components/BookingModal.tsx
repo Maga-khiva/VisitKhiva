@@ -1,20 +1,28 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { serviceSelectOptions } from '../data/services'
 
 type Props = {
   isOpen: boolean
   onClose: () => void
+  selectedService?: string
 }
 
-export default function BookingModal({ isOpen, onClose }: Props) {
+export default function BookingModal({ isOpen, onClose, selectedService }: Props) {
   const [name, setName] = useState('')
   const [kakao, setKakao] = useState('')
-  const [service, setService] = useState('VIP Airport Transfer')
+  const [service, setService] = useState(serviceSelectOptions[0]?.label ?? 'VIP Airport Transfer')
   const [date, setDate] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [statusType, setStatusType] = useState<'success' | 'error' | null>(null)
+
+  useEffect(() => {
+    if (isOpen && selectedService) {
+      setService(selectedService)
+    }
+  }, [isOpen, selectedService])
 
   if (!isOpen) return null
 
@@ -75,10 +83,11 @@ export default function BookingModal({ isOpen, onClose }: Props) {
           <div>
             <label className="block text-sm text-gray-700">서비스 선택</label>
             <select value={service} onChange={(e) => setService(e.target.value)} className="mt-1 w-full border rounded px-3 py-2">
-              <option>VIP Airport Transfer</option>
-              <option>한국어 전용 가이드</option>
-              <option>헤리티지 게스트하우스</option>
-              <option>한복 촬영 투어</option>
+              {serviceSelectOptions.map((option) => (
+                <option key={option.id} value={option.label}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
           <div>
