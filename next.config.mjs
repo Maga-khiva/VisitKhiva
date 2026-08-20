@@ -12,6 +12,16 @@ const nextConfig = {
         hostname: 'images.unsplash.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'postfiles.pstatic.net',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static-cdn.toi-media.com',
+        pathname: '/**',
+      },
     ],
   },
 }

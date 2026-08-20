@@ -26,6 +26,7 @@ function ServiceCard({
           src={service.image}
           alt={service.alt}
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+          referrerPolicy="no-referrer"
           onError={(e) => {
             e.currentTarget.src = PLACEHOLDER_IMAGE
           }}

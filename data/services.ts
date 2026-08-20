@@ -103,7 +103,7 @@ export const services: Service[] = [
         en: 'Flexible Schedule & Urgench Drop-off Available',
       },
     ],
-    image: 'https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://postfiles.pstatic.net/MjAyNjA4MTFfMTcx/MDAxNzg2NDU5MTc3Njc2.B98TlkeaKz3543yOrbvSSV8G2Rv68h9pldNrRZyF77wg.10DEujdtun03B3mlgDybIEnGhNxmFbtFhMCQ_dlPMo0g.JPEG/IMG%EF%BC%BF1067.JPG?type=w966',
     alt: 'Ancient desert fortress overlooking the Khorezm landscape',
     badge: { kr: '프라이빗 투어', en: 'Private Tour' },
     pricingOptions: [
@@ -135,7 +135,7 @@ export const services: Service[] = [
         en: 'Door-to-Door Hotel Transfer',
       },
     ],
-    image: 'https://images.pexels.com/photos/210182/pexels-photo-210182.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    image: 'https://static-cdn.toi-media.com/blogs/uploads/2021/05/WhatsApp-Image-2021-05-25-at-12.44.40-1.jpeg',
     alt: 'Private vehicle traveling through desert highway toward Bukhara',
     badge: { kr: '프라이빗 이동', en: 'Transfer' },
     price: '$180 ~ $220 / vehicle (Up to 3-4 passengers)',
